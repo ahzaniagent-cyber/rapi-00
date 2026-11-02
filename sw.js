@@ -6,13 +6,13 @@
    - Google API, Apps Script, login Google: TIDAK disentuh (selalu langsung).
    Naikkan VERSION setiap rilis agar cache lama dibersihkan.
    ============================================================ */
-const VERSION = 'sirapi-1.1.0';
+const VERSION = 'sirapi-1.1.1';
 const SHELL = VERSION + '-shell';
 const CDN = VERSION + '-cdn';
 const CORE = [
   './', 'index.html', 'css/style.css',
   'js/config.js', 'js/drive.js', 'js/voice.js', 'js/pdf.js', 'js/app.js',
-  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'
+  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/favicon.svg'
 ];
 const CDN_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net', 'cdnjs.cloudflare.com'];
 

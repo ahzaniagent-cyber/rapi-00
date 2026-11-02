@@ -345,7 +345,7 @@ function calcStats() {
 }
 
 // ── 7. Login (Google) & lisensi ─────────────────────────────
-const LOGO = '<div class="logo">S</div>';
+const LOGO = '<img class="logo" src="icons/icon-192.png" alt="">';
 function authShell(inner) {
   $('#screen-app').hidden = true;
   const a = $('#screen-auth'); a.hidden = false;
@@ -441,7 +441,7 @@ function buildNav() {
   const btn = n => `<button class="sn" data-nav="${n.id}" data-act="nav" title="${esc(n.label)}"><i class="bi bi-${n.icon}"></i><span class="l">${esc(n.label)}</span><span class="s">${esc(n.short)}</span></button>`;
   const nm = S.prof.nama || S.user.nama || S.user.email;
   $('#nav-side').innerHTML = `
-    <div class="side-brand"><div class="logo sm">S</div><div class="t"><b>SIRAPI by Ahzani Labs</b><small>Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu</small></div></div>
+    <div class="side-brand"><img class="logo sm" src="icons/icon-192.png" alt=""><div class="t"><b>SIRAPI by Ahzani Labs</b><small>Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu</small></div></div>
     <button class="side-new" data-act="newMenu" ${S.ro ? 'disabled' : ''}><i class="bi bi-plus-lg"></i><span>Catat</span></button>
     <div class="side-items">${NAV.filter(n => n.id !== 'pengaturan').map(btn).join('')}<div class="side-sec"></div>${btn(navDef('pengaturan'))}</div>
     <div class="side-foot">
@@ -1250,4 +1250,13 @@ function start() {
   }
   renderLogin();
 }
-start();
+
+// Layar pembuka: tampil minimal SPLASH_MIN_MS saat aplikasi pertama dibuka, tanpa jeda saat dimuat ulang
+const SPLASH_MIN_MS = 900;
+function hideSplash() {
+  const el = $('#splash'); if (!el) return;
+  let seen = false;
+  try { seen = !!sessionStorage.getItem(NS + 'splash'); sessionStorage.setItem(NS + 'splash', '1'); } catch (e) {}
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, seen ? 0 : Math.max(0, SPLASH_MIN_MS - performance.now()));
+}
+try { start(); } finally { hideSplash(); }

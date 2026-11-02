@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#1F2A44">
 <title>SIRAPI Admin</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230F3532'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' fill='%235EEAD4' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -21,7 +21,7 @@ const GOOGLE_CLIENT_ID = '1079873863699-tskht4l6l9fq46svv1irn4fvspj5oqui.apps.go
 *{box-sizing:border-box}body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:14.5px;-webkit-font-smoothing:antialiased}
 button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}[hidden]{display:none!important}
 .top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1F2A44;color:#fff}
-.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#F28C28,#E0601A);color:#fff;display:grid;place-items:center;font-weight:800}
+.logo{width:36px;height:36px;border-radius:11px;display:block;object-fit:cover}
 .top b{display:block}.top small{opacity:.7;font-size:12px}.top .sp{flex:1}
 .wrap{max-width:1100px;margin:0 auto;padding:16px}
 .card{background:var(--s);border:1px solid var(--line);border-radius:16px}
@@ -97,7 +97,7 @@ function getToken(prompt) {
 const call = (fn, ...a) => getToken().then(t => api(fn, t, ...a)).catch(e => { if (e.code === 'AUTH') A.token = null; if (e.code === 'FORBIDDEN') { A.token = null; renderLogin(e.message); } throw e; });
 
 function renderLogin(msg) {
-  $('#app').innerHTML = `<div class="center"><div class="card login"><div class="logo" style="margin:0 auto;width:48px;height:48px">S</div>
+  $('#app').innerHTML = `<div class="center"><div class="card login"><img class="logo" src="../icons/icon-192.png" alt="" style="margin:0 auto;width:48px;height:48px">
     <h1>SIRAPI Admin</h1><p>Kelola akun pengguna & masa aktif.</p>
     ${msg ? `<p style="color:var(--bad)">${esc(msg)}</p>` : ''}
     <button class="btn pri" id="bLogin" style="width:100%"><i class="bi bi-google"></i> Masuk dengan Google (akun admin)</button>
@@ -125,7 +125,7 @@ function renderMain() {
   const shown = rows.filter(r => !q || (r.email + ' ' + r.nama + ' ' + r.catatan).toLowerCase().includes(q))
     .filter(r => !A.f || (A.f === 'aktif' ? r.status === 'aktif' : A.f === 'soon' ? r.status === 'aktif' && r.sisa <= 14 : r.status !== 'aktif'))
     .sort((a, b) => (a.tanggal_expired || '').localeCompare(b.tanggal_expired || ''));
-  $('#app').innerHTML = `<div class="top"><div class="logo">S</div><div><b>SIRAPI Admin</b><small>${esc(A.email)}</small></div><span class="sp"></span>
+  $('#app').innerHTML = `<div class="top"><img class="logo" src="../icons/icon-192.png" alt=""><div><b>SIRAPI Admin</b><small>${esc(A.email)}</small></div><span class="sp"></span>
       <button class="btn ghost" id="bRef" title="Muat ulang"><i class="bi bi-arrow-clockwise"></i></button><button class="btn ghost" id="bOut"><i class="bi bi-box-arrow-right"></i></button></div>
     <div class="wrap">
       <div class="stats"><div class="card stat"><b>${rows.length}</b><small>Total akun</small></div><div class="card stat"><b style="color:var(--ok)">${akt.length}</b><small>Aktif</small></div>

@@ -1,5 +1,5 @@
 {
-  "name": "SIRAPI — Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu",
+  "name": "SIRAPI by Ahzani Labs",
   "short_name": "SIRAPI",
   "description": "Catat kegiatan sekali — PDF bukti dukung, realisasi, dan isian e-Kinerja beres sendiri. by Ahzani Labs",
   "id": "./",
@@ -27,6 +27,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icons/maskable-512.png",

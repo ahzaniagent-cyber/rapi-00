@@ -3,7 +3,7 @@
    Satu-satunya berkas yang perlu Anda ubah saat deploy.
    Isinya BUKAN rahasia (Client ID & URL memang terlihat di browser).
    ============================================================ */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 // URL Web App Google Apps Script (Deploy > Kelola deployment > URL berakhiran /exec)
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyiqUi8MM5MTggc9WF2xRIAD0my0UV-Lyn0sRLgJ1qUxSxcC9wjCL3_V_NRgkbn436/exec';
