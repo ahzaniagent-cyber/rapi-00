@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0F3532">
+<title>RAPI Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230F3532'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' fill='%235EEAD4' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ===== KONFIGURASI — samakan dengan js/config.js aplikasi RAPI ===== */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyiqUi8MM5MTggc9WF2xRIAD0my0UV-Lyn0sRLgJ1qUxSxcC9wjCL3_V_NRgkbn436/exec';
+const GOOGLE_CLIENT_ID = '1079873863699-tskht4l6l9fq46svv1irn4fvspj5oqui.apps.googleusercontent.com';
+</script>
+<style>
+:root{--bg:#F4F7F6;--s:#fff;--s2:#EEF3F2;--line:#DFE7E5;--t:#10201E;--t2:#52625F;--t3:#93A3A0;--b:#0E9384;--b6:#0B7469;--b50:#E7F6F3;
+  --ok:#12A150;--ok50:#E6F6EC;--warn:#C98200;--warn50:#FFF5DB;--bad:#E5484D;--bad50:#FDECEC}
+*{box-sizing:border-box}body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:14.5px;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}[hidden]{display:none!important}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#0F3532;color:#fff}
+.logo{width:36px;height:36px;border-radius:11px;background:#123F3B;color:#5EEAD4;display:grid;place-items:center;font-weight:800}
+.top b{display:block}.top small{opacity:.7;font-size:12px}.top .sp{flex:1}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--s);border:1px solid var(--line);border-radius:16px}
+.pad{padding:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 14px;border-radius:11px;border:1.5px solid transparent;font-weight:700;font-size:13.5px;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.pri{background:var(--b);color:#fff}.ghost{background:var(--s);border-color:var(--line)}.bad{background:var(--bad50);color:var(--bad)}.soft{background:var(--b50);color:var(--b6)}
+.top .ghost{background:transparent;border-color:rgba(255,255,255,.25);color:#fff}
+.inp{width:100%;min-height:42px;padding:9px 12px;border:1.5px solid var(--line);border-radius:11px;background:var(--s);outline:none;font-size:15px}
+.inp:focus{border-color:var(--b);box-shadow:0 0 0 3px var(--b50)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat{padding:12px 14px}.stat b{display:block;font-size:22px}.stat small{color:var(--t2)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}.bar .inp{flex:1 1 220px}
+.chip{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--s);font-weight:700;font-size:12.5px;color:var(--t2)}
+.chip.on{background:#123B38;border-color:#123B38;color:#fff}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 14px}
+.row .em{font-weight:700;word-break:break-all}.row .meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--t2)}
+.row .acts{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:800}
+.tag.ok{background:var(--ok50);color:var(--ok)}.tag.warn{background:var(--warn50);color:var(--warn)}.tag.bad{background:var(--bad50);color:var(--bad)}.tag.mu{background:var(--s2);color:var(--t2)}
+.center{min-height:80vh;display:grid;place-items:center;padding:16px}
+.login{max-width:400px;width:100%;text-align:center;padding:28px 22px}
+.login h1{font-size:20px;margin:12px 0 4px}.login p{color:var(--t2);margin:0 0 18px}
+.empty{padding:30px;text-align:center;color:var(--t2)}
+.bd{position:fixed;inset:0;background:rgba(10,20,20,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--s);width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:92dvh;overflow:auto}
+.sheet h3{margin:0;padding:16px 18px 6px}.sheet .body{padding:6px 18px}.sheet .foot{display:flex;gap:8px;padding:12px 18px 18px}.sheet .foot .btn{flex:1}
+.f{margin-bottom:12px}.f label{display:block;font-size:12.5px;font-weight:700;color:var(--t2);margin-bottom:5px}.hint{font-size:12px;color:var(--t3);margin-top:4px}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:30;background:#123B38;color:#fff;padding:11px 16px;border-radius:12px;font-weight:600;max-width:92vw}
+.toast.e{background:#B42318}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(min-width:720px){.stats{grid-template-columns:repeat(4,1fr)}.row{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+  .bd{align-items:center}.sheet{border-radius:20px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const A = { token: null, exp: 0, email: '', rows: [], q: '', f: '', client: null };
+const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const tgl = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ' ' + BLN[+m[2] - 1] + ' ' + m[1] : (s || '-'); };
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function toast(m, e) { const t = document.createElement('div'); t.className = 'toast' + (e ? ' e' : ''); t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), e ? 4500 : 2400); }
+
+function api(fn, ...args) {
+  return fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) })
+    .catch(() => { throw new Error('Tidak dapat terhubung ke server.'); })
+    .then(r => r.json()).then(r => { if (r.success) return r.data; const e = new Error(r.message || 'Gagal.'); e.code = r.code; throw e; });
+}
+function initGis() {
+  if (A.client) return true;
+  if (!(window.google && google.accounts && google.accounts.oauth2)) return false;
+  A.client = google.accounts.oauth2.initTokenClient({ client_id: GOOGLE_CLIENT_ID, scope: 'openid email', callback: () => {} });
+  return true;
+}
+(function w() { if (!initGis()) setTimeout(w, 150); })();
+function getToken(prompt) {
+  return new Promise((res, rej) => {
+    if (A.token && A.exp > Date.now() + 60e3) return res(A.token);
+    if (!initGis()) return rej(new Error('Google Sign-In belum termuat.'));
+    A.client.callback = r => { if (r.error) return rej(new Error(r.error)); A.token = r.access_token; A.exp = Date.now() + (r.expires_in || 3600) * 1000; res(A.token); };
+    A.client.error_callback = () => rej(new Error('Jendela Google ditutup / popup diblokir.'));
+    A.client.requestAccessToken({ prompt: prompt == null ? '' : prompt });
+  });
+}
+/** Semua panggilan admin: token harus diminta langsung dari klik bila habis. */
+const call = (fn, ...a) => getToken().then(t => api(fn, t, ...a)).catch(e => { if (e.code === 'AUTH') A.token = null; if (e.code === 'FORBIDDEN') { A.token = null; renderLogin(e.message); } throw e; });
+
+function renderLogin(msg) {
+  $('#app').innerHTML = `<div class="center"><div class="card login"><div class="logo" style="margin:0 auto;width:48px;height:48px">R</div>
+    <h1>RAPI Admin</h1><p>Kelola akun pengguna & masa aktif.</p>
+    ${msg ? `<p style="color:var(--bad)">${esc(msg)}</p>` : ''}
+    <button class="btn pri" id="bLogin" style="width:100%"><i class="bi bi-google"></i> Masuk dengan Google (akun admin)</button>
+    <p style="font-size:12px;color:var(--t3);margin:14px 0 0">Hanya email di ADMIN_EMAILS (Script Properties) yang dapat masuk.</p></div></div>`;
+  $('#bLogin').onclick = () => {
+    A.token = null;
+    const p = getToken('select_account');
+    $('#bLogin').disabled = true;
+    p.then(t => {
+      // email admin hanya untuk tampilan; otorisasi tetap di server (ADMIN_EMAILS)
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + t } }).then(r => r.json()).then(u => { A.email = u.email || ''; const s = document.querySelector('.top small'); if (s) s.textContent = A.email; }).catch(() => {});
+      return api('adminList', t);
+    }).then(rows => { A.rows = rows; renderMain(); }).catch(e => { renderLogin(e.message); });
+  };
+}
+function state(r) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(r.tanggal_expired || '')) return ['bad', 'Tanpa tanggal'];
+  if (r.status !== 'aktif') return ['bad', 'Kedaluwarsa'];
+  if (r.sisa <= 14) return ['warn', 'Sisa ' + r.sisa + ' hari'];
+  return ['ok', 'Aktif'];
+}
+function renderMain() {
+  const rows = A.rows, akt = rows.filter(r => r.status === 'aktif'), soon = akt.filter(r => r.sisa <= 14), exp = rows.filter(r => r.status !== 'aktif');
+  const q = A.q.toLowerCase();
+  const shown = rows.filter(r => !q || (r.email + ' ' + r.nama + ' ' + r.catatan).toLowerCase().includes(q))
+    .filter(r => !A.f || (A.f === 'aktif' ? r.status === 'aktif' : A.f === 'soon' ? r.status === 'aktif' && r.sisa <= 14 : r.status !== 'aktif'))
+    .sort((a, b) => (a.tanggal_expired || '').localeCompare(b.tanggal_expired || ''));
+  $('#app').innerHTML = `<div class="top"><div class="logo">R</div><div><b>RAPI Admin</b><small>${esc(A.email)}</small></div><span class="sp"></span>
+      <button class="btn ghost" id="bRef" title="Muat ulang"><i class="bi bi-arrow-clockwise"></i></button><button class="btn ghost" id="bOut"><i class="bi bi-box-arrow-right"></i></button></div>
+    <div class="wrap">
+      <div class="stats"><div class="card stat"><b>${rows.length}</b><small>Total akun</small></div><div class="card stat"><b style="color:var(--ok)">${akt.length}</b><small>Aktif</small></div>
+        <div class="card stat"><b style="color:var(--warn)">${soon.length}</b><small>Habis ≤ 14 hari</small></div><div class="card stat"><b style="color:var(--bad)">${exp.length}</b><small>Kedaluwarsa</small></div></div>
+      <div class="bar"><input class="inp" id="q" placeholder="Cari email, nama, catatan…" value="${esc(A.q)}"><button class="btn pri" id="bAdd"><i class="bi bi-person-plus"></i> Tambah akun</button></div>
+      <div class="bar">${[['', 'Semua'], ['aktif', 'Aktif'], ['soon', 'Segera habis'], ['exp', 'Kedaluwarsa']].map(([v, l]) => `<button class="chip ${A.f === v ? 'on' : ''}" data-f="${v}">${l}</button>`).join('')}</div>
+      <div class="list">${shown.length ? shown.map(r => { const [c, l] = state(r); return `<div class="card row"><div><div class="em">${esc(r.email)}</div>
+          <div class="meta"><span class="tag ${c}">${l}</span><span>s.d. ${tgl(r.tanggal_expired)}</span>${r.nama ? `<span>${esc(r.nama)}</span>` : ''}${r.sub ? '<span class="tag mu"><i class="bi bi-link-45deg"></i> Terikat akun</span>' : '<span class="tag mu">Belum pernah masuk</span>'}${r.login_terakhir ? `<span>Login: ${esc(r.login_terakhir.replace('T', ' ').slice(0, 16))}</span>` : ''}</div>
+          ${r.catatan ? `<div class="meta" style="margin-top:4px">${esc(r.catatan)}</div>` : ''}</div>
+          <div class="acts"><button class="btn soft" data-ext="3" data-e="${esc(r.email)}">+3 bln</button><button class="btn soft" data-ext="12" data-e="${esc(r.email)}">+1 thn</button><button class="btn ghost" data-edit="${esc(r.email)}"><i class="bi bi-pencil"></i></button></div></div>`; }).join('')
+      : '<div class="card empty">Tidak ada akun.</div>'}</div>
+      <p style="text-align:center;font-size:12px;color:var(--t3);margin:20px 0">RAPI Admin · by Ahzani Labs · Data kerja pengguna tidak tersimpan di sini.</p></div>`;
+  $('#q').oninput = e => { A.q = e.target.value; clearTimeout(A._t); A._t = setTimeout(() => { renderMain(); const i = $('#q'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); };
+  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { A.f = b.dataset.f; renderMain(); });
+  $('#bAdd').onclick = () => edit(null);
+  $('#bOut').onclick = () => { try { google.accounts.oauth2.revoke(A.token, () => {}); } catch (e) {} A.token = null; renderLogin(); };
+  $('#bRef').onclick = () => call('adminList').then(r => { A.rows = r; renderMain(); toast('Dimuat ulang.'); }).catch(e => toast(e.message, 1));
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => edit(A.rows.find(r => r.email === b.dataset.edit)));
+  document.querySelectorAll('[data-ext]').forEach(b => b.onclick = () => {
+    const r = A.rows.find(x => x.email === b.dataset.e);
+    const base = r.status === 'aktif' && r.tanggal_expired ? new Date(r.tanggal_expired + 'T00:00:00') : new Date();
+    base.setMonth(base.getMonth() + Number(b.dataset.ext));
+    save({ email: r.email, nama: r.nama, catatan: r.catatan, tanggal_expired: ymd(base) }, b);
+  });
+}
+function save(d, btn) {
+  if (btn) { btn.disabled = true; btn.dataset.h = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>'; }
+  return call('adminSave', d).then(r => {
+    const i = A.rows.findIndex(x => x.email === r.email);
+    if (i >= 0) A.rows[i] = r; else A.rows.push(r);
+    closeSheet(); renderMain(); toast(r.email + ' aktif s.d. ' + tgl(r.tanggal_expired));
+  }).catch(e => { toast(e.message, 1); if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.h; } });
+}
+function closeSheet() { const s = $('.bd'); if (s) s.remove(); }
+function edit(r) {
+  const def = new Date(); def.setFullYear(def.getFullYear() + 1);
+  const x = r || { email: '', nama: '', catatan: '', tanggal_expired: ymd(def) };
+  const el = document.createElement('div'); el.className = 'bd';
+  el.innerHTML = `<div class="sheet" role="dialog"><h3>${r ? 'Ubah akun' : 'Tambah akun'}</h3><div class="body">
+    <div class="f"><label>Email Google</label><input class="inp" id="fE" type="email" value="${esc(x.email)}" ${r ? 'readonly' : ''} placeholder="nama@gmail.com"></div>
+    <div class="f"><label>Nama</label><input class="inp" id="fN" value="${esc(x.nama)}"></div>
+    <div class="f"><label>Aktif sampai (WIB)</label><input class="inp" id="fD" type="date" value="${esc(x.tanggal_expired)}">
+      <div class="quick">${[1, 3, 6, 12].map(m => `<button class="chip" data-m="${m}">+${m === 12 ? '1 thn' : m + ' bln'} dari hari ini</button>`).join('')}<button class="chip" data-m="0">Nonaktifkan (kemarin)</button></div>
+      <div class="hint">Kedaluwarsa = pengguna hanya bisa melihat & ekspor; data di Drive-nya tidak dihapus.</div></div>
+    <div class="f"><label>Catatan</label><textarea class="inp" id="fC" rows="2" placeholder="mis. KUA Sawoo · lunas 1 thn">${esc(x.catatan)}</textarea></div>
+    ${r && r.sub ? '<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="fR"> Lepas ikatan akun Google (bila pengguna ganti akun dengan email yang sama)</label>' : ''}
+    </div><div class="foot">${r ? '<button class="btn bad" id="fDel" style="flex:0 0 auto"><i class="bi bi-trash3"></i></button>' : ''}<button class="btn ghost" id="fX">Batal</button><button class="btn pri" id="fS">Simpan</button></div></div>`;
+  document.body.appendChild(el);
+  el.onclick = e => { if (e.target === el) closeSheet(); };
+  el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const d = new Date(); if (+b.dataset.m) d.setMonth(d.getMonth() + Number(b.dataset.m)); else d.setDate(d.getDate() - 1); $('#fD').value = ymd(d); });
+  $('#fX').onclick = closeSheet;
+  $('#fS').onclick = e => {
+    const email = $('#fE').value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast('Email tidak valid.', 1);
+    if (!$('#fD').value) return toast('Isi tanggal.', 1);
+    save({ email, nama: $('#fN').value, catatan: $('#fC').value, tanggal_expired: $('#fD').value, resetSub: !!($('#fR') && $('#fR').checked) }, e.currentTarget);
+  };
+  if ($('#fDel')) $('#fDel').onclick = () => {
+    if (!confirm('Hapus akun ' + x.email + ' dari registry? Pengguna tidak bisa masuk lagi. Data di Drive pengguna tidak terhapus.')) return;
+    call('adminDelete', x.email).then(() => { A.rows = A.rows.filter(z => z.email !== x.email); closeSheet(); renderMain(); toast('Akun dihapus.'); }).catch(er => toast(er.message, 1));
+  };
+}
+if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(GAS_URL) || /^TEMPEL/.test(GOOGLE_CLIENT_ID)) $('#app').innerHTML = '<div class="center"><div class="card login"><h1>Konfigurasi belum lengkap</h1><p>Isi GAS_URL dan GOOGLE_CLIENT_ID di bagian atas berkas index.html.</p></div></div>';
+else renderLogin();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Backend lisensi (Apps Script) TIDAK BOLEH di-push — repo ini publik
+backend/
+*.gs
+
+# Paket unduhan & salinan lama (jangan ikut di-push)
+*.zip
+rapi-app-v*/
+rapi-admin-v*/
+rapi-ekstensi-v*/
+
+# Sistem / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+node_modules/
