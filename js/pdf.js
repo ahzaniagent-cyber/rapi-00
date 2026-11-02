@@ -1,5 +1,5 @@
 /* ============================================================
-   RAPI — js/pdf.js · by Ahzani Labs
+   SIRAPI — js/pdf.js · by Ahzani Labs
    PDF bukti dukung dibuat DI BROWSER (jsPDF), A4 lanskap,
    maksimal 4 foto (terkompres, hanya disimpan di dalam PDF).
    Pustaka dimuat saat dibutuhkan agar pembukaan aplikasi tetap cepat.
@@ -123,7 +123,7 @@ const PDF = (function () {
       doc.setFont('helvetica', 'normal'); doc.text('NIP. ' + (prof.atasanNip || '-'), ax, sy + 30);
     }
     doc.setFontSize(6.5); doc.setTextColor(150);
-    doc.text('Dibuat dengan RAPI — Rekam Aktifitas dan Pelaporan Individu · by Ahzani Labs', M, H - 6);
+    doc.text('Dibuat dengan SIRAPI — Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu · by Ahzani Labs', M, H - 6);
     return doc.output('blob');
   }
 

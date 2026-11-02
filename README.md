@@ -1,15 +1,16 @@
-# RAPI — Rekam Aktifitas dan Pelaporan Individu
-v1.0.0 · by Ahzani Labs
+# SIRAPI — Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu
+v1.1.0 · by Ahzani Labs
 
-Catat kegiatan sekali, lalu PDF bukti dukung, realisasi, dan isian e-Kinerja beres sendiri. Data kerja pengguna tersimpan di Google Drive milik pengguna (scope `drive.file`).
+Catat kegiatan sekali, lalu PDF bukti dukung, realisasi, dan isian e-Kinerja beres sendiri. Data kerja pengguna tersimpan di Google Drive milik pengguna (scope `drive.file`), di folder **SIRAPI by Ahzani Labs**.
 
 ## Struktur
 | Lokasi | Isi |
 |---|---|
 | `index.html`, `css/`, `js/` | Aplikasi pengguna (root GitHub Pages) |
+| `manifest.webmanifest`, `sw.js`, `icons/` | PWA: bisa dipasang di desktop & HP. **Naikkan `VERSION` di `sw.js` setiap rilis.** |
 | `js/config.js` | **Diisi saat deploy:** `GAS_URL`, `GOOGLE_CLIENT_ID`, `ADMIN_WA` |
 | `admin/` | Aplikasi admin (`/admin/`). Konfigurasi ada di bagian atas `admin/index.html` |
-| `extension/` | Ekstensi Chrome MV3 (Load unpacked) |
+| `extension/` | Ekstensi Chrome MV3. Pengguna mengunduhnya dari aplikasi: Pengaturan → Ekstensi e-Kinerja → Unduh ekstensi (ZIP) |
 | `PANDUAN-INSTALASI-RAPI.md` | Langkah instalasi + uji manual |
 
 Backend lisensi (`Kode.gs`, Google Apps Script) **tidak ada di repo ini**. Berkasnya disimpan terpisah di luar folder repo dan hanya dipasang di Apps Script.

@@ -1,5 +1,5 @@
-/* RAPI Ekstensi — bridge.js
-   Berjalan di halaman aplikasi RAPI. Hanya aktif bila halaman bertanda <meta name="rapi-app">.
+/* SIRAPI Ekstensi — bridge.js
+   Berjalan di halaman aplikasi SIRAPI. Hanya aktif bila halaman bertanda <meta name="rapi-app">.
    Menerima data FINAL (RAPI_EXPORT) dari aplikasi lewat window.postMessage pada origin yang sama,
    lalu menyimpannya di chrome.storage.local perangkat ini. Tidak membaca cookie/password. */
 (function () {

@@ -1,5 +1,5 @@
 /* ============================================================
-   RAPI — js/voice.js · by Ahzani Labs
+   SIRAPI — js/voice.js · by Ahzani Labs
    Rekam suara (Web Speech API, id-ID) + perapian teks BERBASIS ATURAN.
    Aturan keras: transkrip asli selalu disimpan; perapian tidak boleh
    menambah fakta — hanya merapikan bentuk; hasil selalu bisa diedit.
@@ -10,27 +10,93 @@ const Voice = (function () {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const supported = () => !!SR;
 
+  // ── Gabung potongan transkrip tanpa duplikasi ─────────────
+  // Chrome Android (mode continuous) mengirim hasil KUMULATIF: "melakukan", "melakukan pelayanan",
+  // "melakukan pelayanan nikah"… Bila ditempel begitu saja → kalimat berulang-ulang.
+  const words = s => String(s || '').trim().split(/\s+/).filter(Boolean);
+  const norm = w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  function merge(a, b) {
+    const A = words(a), B = words(b);
+    if (!B.length) return A.join(' ');
+    if (!A.length) return B.join(' ');
+    const na = A.map(norm), nb = B.map(norm);
+    let p = 0; while (p < na.length && p < nb.length && na[p] === nb[p]) p++;
+    if (p === nb.length) return A.join(' ');                                   // b sudah termuat di awal a
+    if (p >= na.length - 1 && nb.length >= na.length) return B.join(' ');       // b = a yang diperpanjang/diperbaiki
+    const sa = na.join(' '), sb = nb.join(' ');
+    if (sa.endsWith(' ' + sb) || sa === sb) return A.join(' ');                // b mengulang ekor a
+    for (let k = Math.min(na.length, nb.length); k >= 2; k--) {                 // ekor a = kepala b
+      if (na.slice(-k).join(' ') === nb.slice(0, k).join(' ')) return A.concat(B.slice(k)).join(' ');
+    }
+    return A.concat(B).join(' ');
+  }
+  /** Hapus frasa yang berulang berurutan ("A B A B C" → "A B C"), berulang sampai stabil. */
+  function dedupe(text) {
+    let T = words(text);
+    for (let changed = true, guard = 0; changed && guard < 50; guard++) {
+      changed = false;
+      const N = T.map(norm);
+      for (let n = Math.min(14, Math.floor(T.length / 2)); n >= 1 && !changed; n--) {
+        for (let i = 0; i + 2 * n <= T.length; i++) {
+          let same = true;
+          for (let j = 0; j < n; j++) if (!N[i + j] || N[i + j] !== N[i + n + j]) { same = false; break; }
+          if (same && /^\d+$/.test(N[i]) && n === 1) same = false;            // "1 1" bisa jadi angka sungguhan
+          if (same) { T.splice(i + n, n); changed = true; break; }
+        }
+      }
+    }
+    return T.join(' ');
+  }
+
+  const isAndroid = /Android/i.test(navigator.userAgent || '');
+  const MSG = {
+    'not-allowed': 'Izin mikrofon ditolak. Izinkan mikrofon untuk situs ini.',
+    'service-not-allowed': 'Pengenalan suara tidak diizinkan di browser ini. Gunakan Google Chrome.',
+    network: 'Pengenalan suara butuh koneksi internet.',
+    'audio-capture': 'Mikrofon tidak ditemukan atau sedang dipakai aplikasi lain.',
+    'language-not-supported': 'Bahasa Indonesia belum didukung pengenalan suara di perangkat ini.'
+  };
+
   /** Mulai merekam. Mengembalikan objek dengan stop(). */
   function start(h) {
-    const r = new SR();
-    r.lang = 'id-ID'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
-    let final = '', stopped = false;
-    r.onresult = e => {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += t.trim() + ' '; else interim += t;
-      }
-      h.onText && h.onText(final.trim(), interim.trim());
-    };
-    r.onerror = e => {
-      const m = { 'not-allowed': 'Izin mikrofon ditolak. Izinkan mikrofon untuk situs ini.', 'no-speech': 'Tidak terdengar suara. Coba lagi lebih dekat ke mikrofon.', network: 'Pengenalan suara butuh koneksi internet.', 'audio-capture': 'Mikrofon tidak ditemukan.' };
-      h.onError && h.onError(m[e.error] || ('Pengenalan suara gagal: ' + e.error));
-    };
-    // Chrome Android kadang berhenti sendiri; lanjutkan otomatis sampai pengguna menekan berhenti
-    r.onend = () => { if (!stopped) { try { r.start(); return; } catch (e) {} } h.onEnd && h.onEnd(final.trim()); };
-    r.start();
-    return { stop() { stopped = true; try { r.stop(); } catch (e) {} } };
+    let committed = '', session = '', stopped = false, ended = false, idle = 0, timer = null, r = null;
+    const text = () => merge(committed, session);
+    function finish(errMsg) {
+      if (ended) return; ended = true; stopped = true; clearTimeout(timer);
+      if (errMsg) h.onError && h.onError(errMsg);
+      h.onEnd && h.onEnd(text());
+    }
+    function begin() {
+      r = new SR();
+      r.lang = 'id-ID'; r.interimResults = true; r.maxAlternatives = 1;
+      // Android: mode continuous rusak (hasil kumulatif) → satu ucapan per sesi, lalu disambung otomatis
+      r.continuous = !isAndroid;
+      let got = false;
+      r.onresult = e => {
+        let fin = '', interim = '';
+        for (let i = 0; i < e.results.length; i++) {                             // susun ulang seluruh sesi, bukan menempel
+          const t = e.results[i][0].transcript.trim(); if (!t) continue;
+          if (e.results[i].isFinal) fin = merge(fin, t); else interim = merge(interim, t);
+        }
+        session = fin; got = true; idle = 0;
+        const base = text(), all = merge(base, interim);
+        h.onText && h.onText(base, all.length > base.length && all.toLowerCase().startsWith(base.toLowerCase()) ? all.slice(base.length).trim() : (interim && !base ? interim : ''));
+      };
+      r.onerror = e => {
+        if (e.error === 'aborted' || e.error === 'no-speech') return;            // bukan kegagalan: dilanjutkan di onend
+        finish(MSG[e.error] || ('Pengenalan suara gagal (' + e.error + ').'));
+      };
+      r.onend = () => {
+        committed = text(); session = '';
+        if (stopped || ended) return finish();
+        idle = got ? 0 : idle + 1;
+        if (idle >= 4) return finish(committed ? '' : 'Tidak terdengar suara. Coba lagi lebih dekat ke mikrofon.');
+        timer = setTimeout(() => { if (stopped) return finish(); try { begin(); } catch (e) { finish('Rekam suara terhenti. Tekan rekam lagi.'); } }, isAndroid ? 120 : 250);
+      };
+      r.start();
+    }
+    begin();
+    return { stop() { stopped = true; clearTimeout(timer); try { r.stop(); } catch (e) {} setTimeout(() => finish(), 1500); } };
   }
 
   // ── Angka terucap → digit ──────────────────────────────────
@@ -161,8 +227,10 @@ const Voice = (function () {
   // ── Perapian umum ─────────────────────────────────────────
   function clean(raw, now) {
     now = now || new Date();
-    let t = ' ' + String(raw || '') + ' ';
+    let t = ' ' + dedupe(raw) + ' ';                            // buang pengulangan kumulatif lebih dulu
     t = t.replace(/\b(e+h+|e+m+|e{2,}|hm+|anu|apa namanya|apa ya)\b[,.]?/gi, ' ');
+    t = t.replace(/(^|[.?!]\s*|\s)(gitu ya|begitu ya|gitu|nah|sih|dong|deh|lho|loh)\b[,.]?(?=\s|$)/gi, '$1');
+    t = t.replace(/^\s*(jadi|terus|nah)\s+/i, ' ');
     t = t.replace(/\s+(tanda tanya)\b/gi, '?').replace(/\s+(titik)\b(?!\s+(?:nol|koordinat|temu|kumpul|awal))/gi, '.').replace(/\s+koma\b/gi, ',');
     t = t.replace(/\s*\b(baris baru|paragraf baru)\b\s*/gi, '\n');
     t = t.replace(/\b(\w+)(\s+\1\b)+/gi, '$1');                 // "saya saya" → "saya"
@@ -176,5 +244,5 @@ const Voice = (function () {
     return { text: t, tanggal: dt.tanggal, mulai: tm.mulai, selesai: tm.selesai, lokasi: parsePlace(t) };
   }
 
-  return { supported, start, clean, _numbers: numbers };
+  return { supported, start, clean, merge, dedupe, _numbers: numbers };
 })();

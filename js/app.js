@@ -1,5 +1,5 @@
 /* ============================================================
-   RAPI — js/app.js · Rekam Aktifitas dan Pelaporan Individu · by Ahzani Labs
+   SIRAPI — js/app.js · Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu · by Ahzani Labs
    Frontend statis. Login Google + cek lisensi (backend GAS),
    data kerja di Google Drive/Sheets MILIK PENGGUNA (lihat js/drive.js).
    Prinsip instan: render dari cache lokal, sinkron di latar belakang,
@@ -82,20 +82,22 @@ const tahunById = id => S.tahun.find(t => t.ID === id && alive(t));
 const tahunLabel = () => (tahunById(S.tahunId) || {}).Tahun || '-';
 const myBD = () => S.bd.filter(b => alive(b) && b.TahunID === S.tahunId);
 const myLap = () => S.lap.filter(l => alive(l) && l.TahunID === S.tahunId);
-const sumberLabel = s => (s === 'LINK' ? 'Link Drive' : s === 'UPLOAD' ? 'PDF unggahan' : 'Dibuat di RAPI');
+const sumberLabel = s => (s === 'LINK' ? 'Link Drive' : s === 'UPLOAD' ? 'PDF unggahan' : 'Dibuat di SIRAPI');
 
 // ── 3. Backend lisensi ──────────────────────────────────────
 function gs(fn, ...args) {
   if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(API_URL)) return Promise.reject(new Error('GAS_URL di js/config.js belum diisi dengan URL /exec yang benar.'));
   return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
-    .catch(() => { throw new Error('Tidak dapat terhubung ke server RAPI. Periksa koneksi internet.'); })
+    .catch(() => { throw new Error('Tidak dapat terhubung ke server SIRAPI. Periksa koneksi internet.'); })
     .then(res => { if (!res.ok) throw new Error('Server merespons ' + res.status + '.'); return res.json().catch(() => { throw new Error('Respons server tidak valid.'); }); })
     .then(r => { if (r && r.success) return r.data; const e = new Error((r && r.message) || 'Terjadi kesalahan.'); e.code = r && r.code; e.data = r && r.data; throw e; });
 }
 
 // ── 4. UI primitives ────────────────────────────────────────
 function toast(msg, type) {
+  if ($$('#toasts .toast').some(t => t.dataset.msg === msg && t.style.opacity !== '0')) return;   // pesan sama tidak menumpuk
   const el = document.createElement('div');
+  el.dataset.msg = msg;
   el.className = 'toast ' + (type || '');
   const ic = type === 'bad' ? 'x-circle-fill' : type === 'warn' ? 'exclamation-circle-fill' : 'check-circle-fill';
   el.innerHTML = `<i class="bi bi-${ic}"></i><span>${esc(msg)}</span>`;
@@ -178,7 +180,7 @@ function barCls(p) { return p >= 100 ? 'ok' : p >= 50 ? '' : p > 0 ? 'warn' : 'b
 const isDark = () => document.documentElement.dataset.theme === 'dark';
 function applyTheme(t) {
   document.documentElement.dataset.theme = t; store.gset('theme', t);
-  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'dark' ? '#0C1416' : '#F4F7F6';
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'dark' ? '#0E1320' : '#F5F6F8';
 }
 function compressImage(file, max = 1280, q = 0.72) {
   return new Promise((res, rej) => {
@@ -195,7 +197,7 @@ function compressImage(file, max = 1280, q = 0.72) {
 function sizeKB(list) { return Math.round(list.reduce((s, d) => s + d.length * 0.75, 0) / 1024); }
 function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Gagal memuat pustaka. Periksa koneksi.')); document.head.appendChild(s); }); }
 /** Mode baca-saja (akun kedaluwarsa): tolak aksi yang mengubah data. */
-function guard() { if (!S.ro) return false; toast('Masa aktif berakhir — RAPI dalam mode baca-saja & ekspor. Hubungi admin untuk perpanjangan.', 'warn'); return true; }
+function guard() { if (!S.ro) return false; toast('Masa aktif berakhir — SIRAPI dalam mode baca-saja & ekspor. Hubungi admin untuk perpanjangan.', 'warn'); return true; }
 
 // ── 5. Data lokal + sinkron ke Drive pengguna ───────────────
 function persist() {
@@ -280,7 +282,7 @@ async function pull() {
   if (Object.keys(S.dirty).length) syncNow();
 }
 
-// Folder Drive: RAPI / DATABASE LPJ / {Tahun} / {Butiran} / TW n — dirujuk lewat ID (cache), dibuat bila belum ada
+// Folder Drive: SIRAPI by Ahzani Labs / DATABASE LPJ / {Tahun} / {Butiran} / TW n — dirujuk lewat ID (cache), dibuat bila belum ada
 async function ensurePath(parts) {
   const ws = await ensureWs();
   let parent = ws.rootId, key = ws.rootId;
@@ -343,26 +345,26 @@ function calcStats() {
 }
 
 // ── 7. Login (Google) & lisensi ─────────────────────────────
-const LOGO = '<div class="logo">R</div>';
+const LOGO = '<div class="logo">S</div>';
 function authShell(inner) {
   $('#screen-app').hidden = true;
   const a = $('#screen-auth'); a.hidden = false;
   a.innerHTML = `<div class="auth"><div class="auth-card">
-    <div class="brand-lock">${LOGO}<div><b>RAPI</b><small>Rekam Aktifitas dan Pelaporan Individu</small></div></div>${inner}</div>
-    <div class="auth-foot">RAPI v${esc(APP_VERSION)} · by Ahzani Labs</div></div>`;
+    <div class="brand-lock">${LOGO}<div><b>SIRAPI by Ahzani Labs</b><small>Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu</small></div></div>${inner}</div>
+    <div class="auth-foot">SIRAPI v${esc(APP_VERSION)} · by Ahzani Labs</div></div>`;
 }
 function renderLogin(msg) {
-  authShell(`<h2>Masuk ke RAPI</h2><p class="sub">Catat kegiatan sekali — PDF bukti dukung, realisasi, dan isian e-Kinerja beres sendiri.</p>
+  authShell(`<h2>Masuk ke SIRAPI</h2><p class="sub">Catat kegiatan sekali — PDF bukti dukung, realisasi, dan isian e-Kinerja beres sendiri.</p>
     ${msg ? `<div class="note warn mb"><i class="bi bi-exclamation-circle"></i><div>${esc(msg)}</div></div>` : ''}
     <button class="btn btn-google btn-block" data-act="login"><span class="g-ic">G</span> Masuk dengan Google</button>
     <ul class="auth-points">
-      <li><i class="bi bi-shield-check"></i><span>Data kerja tersimpan di <b>Google Drive Anda sendiri</b>. RAPI hanya meminta akses ke berkas yang dibuatnya.</span></li>
+      <li><i class="bi bi-shield-check"></i><span>Data kerja tersimpan di <b>Google Drive Anda sendiri</b>. SIRAPI hanya meminta akses ke berkas yang dibuatnya.</span></li>
       <li><i class="bi bi-phone"></i><span>Di HP yang memakai akun Google lain: pilih <b>“Gunakan akun lain”</b>, lalu masuk dengan email yang terdaftar.</span></li>
     </ul>`);
 }
 function renderNotRegistered(email) {
-  const wa = typeof ADMIN_WA !== 'undefined' && ADMIN_WA ? 'https://wa.me/' + String(ADMIN_WA).replace(/\D/g, '') + '?text=' + encodeURIComponent('Halo admin RAPI, saya ingin mengaktifkan akun RAPI untuk email: ' + email) : '';
-  authShell(`<h2>Email belum terdaftar</h2><p class="sub"><b>${esc(email)}</b> belum aktif di RAPI. Akun diaktifkan oleh admin.</p>
+  const wa = typeof ADMIN_WA !== 'undefined' && ADMIN_WA ? 'https://wa.me/' + String(ADMIN_WA).replace(/\D/g, '') + '?text=' + encodeURIComponent('Halo admin SIRAPI, saya ingin mengaktifkan akun SIRAPI untuk email: ' + email) : '';
+  authShell(`<h2>Email belum terdaftar</h2><p class="sub"><b>${esc(email)}</b> belum aktif di SIRAPI. Akun diaktifkan oleh admin.</p>
     ${wa ? `<a class="btn btn-pri btn-block" href="${esc(wa)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Hubungi admin</a>` : ''}
     <button class="btn btn-ghost btn-block mt-s" data-act="login">Masuk dengan akun lain</button>`);
 }
@@ -430,6 +432,7 @@ const val = v => (typeof v === 'function' ? v() : v);
 function enterApp() {
   $('#screen-auth').hidden = true; $('#screen-auth').innerHTML = '';
   $('#screen-app').hidden = false;
+  $('#screen-app').classList.toggle('side-mini', !!store.gget('sideMini', 0));
   buildNav();
   go(S.page && PAGES[S.page] && S.page !== 'form' ? S.page : 'beranda');
 }
@@ -438,7 +441,7 @@ function buildNav() {
   const btn = n => `<button class="sn" data-nav="${n.id}" data-act="nav" title="${esc(n.label)}"><i class="bi bi-${n.icon}"></i><span class="l">${esc(n.label)}</span><span class="s">${esc(n.short)}</span></button>`;
   const nm = S.prof.nama || S.user.nama || S.user.email;
   $('#nav-side').innerHTML = `
-    <div class="side-brand"><div class="logo sm">R</div><div class="t"><b>RAPI</b><small>Rekam Aktifitas &amp; Pelaporan</small></div></div>
+    <div class="side-brand"><div class="logo sm">S</div><div class="t"><b>SIRAPI by Ahzani Labs</b><small>Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu</small></div></div>
     <button class="side-new" data-act="newMenu" ${S.ro ? 'disabled' : ''}><i class="bi bi-plus-lg"></i><span>Catat</span></button>
     <div class="side-items">${NAV.filter(n => n.id !== 'pengaturan').map(btn).join('')}<div class="side-sec"></div>${btn(navDef('pengaturan'))}</div>
     <div class="side-foot">
@@ -453,6 +456,7 @@ function buildNav() {
 }
 function go(page) {
   if (!PAGES[page]) page = 'beranda';
+  if (REC && page !== 'form') REC.stop();          // jangan biarkan mikrofon menyala di halaman lain
   S.page = page;
   let sec = $('#pg-' + page);
   if (!sec) { sec = document.createElement('section'); sec.className = 'page'; sec.id = 'pg-' + page; $('#view').appendChild(sec); }
@@ -492,7 +496,7 @@ function renderSync() {
 function renderBanner() {
   const el = $('#banner'); if (!el || !S.user) return;
   const u = S.user;
-  if (S.ro) el.innerHTML = `<div class="banner bad"><i class="bi bi-lock"></i><div><b>Masa aktif berakhir${u.tanggal_expired ? ' ' + tgl(u.tanggal_expired, true) : ''}.</b> RAPI dalam mode baca-saja &amp; ekspor. Data Anda tetap aman di Drive. Hubungi admin untuk perpanjangan.</div></div>`;
+  if (S.ro) el.innerHTML = `<div class="banner bad"><i class="bi bi-lock"></i><div><b>Masa aktif berakhir${u.tanggal_expired ? ' ' + tgl(u.tanggal_expired, true) : ''}.</b> SIRAPI dalam mode baca-saja &amp; ekspor. Data Anda tetap aman di Drive. Hubungi admin untuk perpanjangan.</div></div>`;
   else if (u.sisaHari && u.sisaHari <= 14) el.innerHTML = `<div class="banner warn"><i class="bi bi-hourglass-split"></i><div>Masa aktif tinggal <b>${u.sisaHari} hari</b> (sampai ${tgl(u.tanggal_expired, true)}).</div></div>`;
   else el.innerHTML = '';
 }
@@ -663,7 +667,7 @@ function formStep3(el) {
       ${x.Lokasi ? `<div><dt>Tempat</dt><dd>${esc(x.Lokasi)}</dd></div>` : ''}<div><dt>Uraian</dt><dd>${esc(x.Uraian)}</dd></div><div><dt>Realisasi</dt><dd>${esc(x.Realisasi)}</dd></div>${x.SumberData ? `<div><dt>Sumber data</dt><dd>${esc(x.SumberData)}</dd></div>` : ''}</dl>
     ${S.draft.photos.length ? `<div class="photos sm">${S.draft.photos.map(p => `<div class="ph"><img src="${p}" alt=""></div>`).join('')}</div>` : '<p class="hint">Tanpa foto dokumentasi.</p>'}</div>
   ${missProf.length ? `<div class="note warn mt"><i class="bi bi-person-exclamation"></i><div>Profil belum lengkap (${missProf.join(', ')}). Kop & tanda tangan PDF akan kosong. <a href="#" data-act="nav" data-nav="pengaturan">Lengkapi profil</a></div></div>` : ''}
-  <div class="note mt"><i class="bi bi-folder2"></i><div>PDF A4 lanskap disimpan di Google Drive Anda: <b>RAPI › DATABASE LPJ › ${esc(th ? th.Tahun : '')} › ${esc(b ? b.Nama : '')} › TW ${esc(x.TW)}</b>.</div></div>
+  <div class="note mt"><i class="bi bi-folder2"></i><div>PDF A4 lanskap disimpan di Google Drive Anda: <b>SIRAPI by Ahzani Labs › DATABASE LPJ › ${esc(th ? th.Tahun : '')} › ${esc(b ? b.Nama : '')} › TW ${esc(x.TW)}</b>.</div></div>
   <div class="form-actions"><button class="btn btn-ghost" data-act="formStep" data-v="2" aria-label="Kembali"><i class="bi bi-arrow-left"></i></button><button class="btn btn-soft" data-act="formDraftDone">Simpan draft</button><button class="btn btn-pri" data-act="formFinal"><i class="bi bi-file-earmark-pdf"></i> Finalisasi</button></div>`;
 }
 
@@ -699,7 +703,7 @@ function renderSKP(sec) {
   const cur = sel ? groups.find(g => g.ID === sel) : (isWide() ? groups[0] : null);
   const per = skpPer(), ext = document.documentElement.dataset.rapiExt === '1';
   sec.innerHTML = `
-    <div class="note mb"><i class="bi bi-cursor"></i><div>Buka e-Kinerja di tab lain. <b>Klik isian</b> untuk menyalin, lalu tempel ke kolom yang sama.${ext ? ' <span class="tag ok"><i class="bi bi-plug"></i> Ekstensi RAPI terhubung — bisa isi otomatis di e-Kinerja</span>' : ''}</div></div>
+    <div class="note mb"><i class="bi bi-cursor"></i><div>Buka e-Kinerja di tab lain. <b>Klik isian</b> untuk menyalin, lalu tempel ke kolom yang sama.${ext ? ' <span class="tag ok"><i class="bi bi-plug"></i> Ekstensi SIRAPI terhubung — bisa isi otomatis di e-Kinerja</span>' : ''}</div></div>
     <div class="row gap mb skp-per"><div class="chips m0">${chipSet('skpPer', [['T', 'Tahunan'], ['1', 'TW 1'], ['2', 'TW 2'], ['3', 'TW 3'], ['4', 'TW 4']], per)}</div>
       <button class="icon-btn sm" data-act="skpReload" title="Muat link folder" aria-label="Muat link folder"><i class="bi bi-arrow-clockwise"></i></button></div>
     <div class="split ${sel ? 'show-detail' : ''}"><div class="pane-list"><div class="list">${groups.length ? groups.map(b => `
@@ -724,7 +728,7 @@ function skpDetail(b, per) {
       : '<p class="muted small m0">Belum ada bukti final pada periode ini.</p>'}</div>
     ${d.all.length ? `<details class="more card card-pad mt-s"><summary><i class="bi bi-chevron-down"></i> Lihat ${d.all.length} kegiatan</summary>${d.all.slice().sort((a, c) => (a.Tanggal || '').localeCompare(c.Tanggal || '')).map(l => `<div class="mini-row"><span class="grow"><b>${tgl(l.Tanggal, true)}</b> · TW ${esc(l.TW)} · ${esc(l.Uraian)}</span></div>`).join('')}</details>` : ''}`;
 }
-/** Jembatan ke ekstensi Chrome RAPI: kirim data FINAL (bukan draft) ke content script di halaman ini. */
+/** Jembatan ke ekstensi Chrome SIRAPI (identitas pesan 'RAPI' dipertahankan agar kompatibel): kirim data FINAL (bukan draft) ke content script di halaman ini. */
 function buildExport() {
   const items = myBD().map(b => {
     const per = {};
@@ -765,7 +769,7 @@ function renderPengaturan(sec) {
   sec.innerHTML = `<div class="card card-pad profile"><span class="avatar xl">${esc(initials(nm))}</span><div class="grow"><h3 class="h3">${esc(nm)}</h3><div class="muted small">${esc(u.email)}</div>
       <span class="tag ${S.ro ? 'bad' : 'ok'} mt-s">${S.ro ? 'Kedaluwarsa' : 'Aktif'}${u.tanggal_expired ? ' · s.d. ' + tgl(u.tanggal_expired, true) : ''}</span></div></div>
     <div class="menu card mt only-mobile"><div class="mi"><span class="mi-ic"><i class="bi bi-moon-stars"></i></span><span class="grow"><b>Mode gelap</b></span><label class="sw"><input type="checkbox" data-ch="theme" ${isDark() ? 'checked' : ''}><span></span></label></div>
-      ${mi('box-arrow-right', 'Keluar', 'Keluar dari akun Google di RAPI', 'logout')}</div>
+      ${mi('box-arrow-right', 'Keluar', 'Keluar dari akun Google di SIRAPI', 'logout')}</div>
     <div class="menu card mt only-mobile">${['realisasi', 'bd'].map(id => { const n = navDef(id); return mi(n.icon, n.label, '', 'nav', { nav: id }); }).join('')}</div>
     <div class="sec-title">Profil (kop & tanda tangan PDF)</div>
     <div class="card card-pad"><form id="fProf" autocomplete="off">
@@ -783,12 +787,14 @@ function renderPengaturan(sec) {
         ${t.Aktif !== 'Y' && !S.ro ? `<button class="btn btn-ghost btn-sm" data-act="tahunAktif" data-id="${t.ID}">Jadikan aktif</button>` : ''}</div>`).join('')}</div></div>
     <div class="sec-title">Data & penyimpanan</div>
     <div class="menu card">${mi('file-earmark-zip', 'Cadangkan per tahun (ZIP)', 'Struktur folder & PDF persis seperti di Drive', 'backup')}
-      ${S.ws ? `<a class="mi" href="${esc(GD.folderUrl(S.ws.rootId))}" target="_blank" rel="noopener"><span class="mi-ic"><i class="bi bi-folder2-open"></i></span><span class="grow"><b>Buka folder RAPI di Drive</b><small>Milik Anda sendiri</small></span><i class="bi bi-box-arrow-up-right muted"></i></a>
-      <a class="mi" href="https://docs.google.com/spreadsheets/d/${esc(S.ws.ssId)}" target="_blank" rel="noopener"><span class="mi-ic"><i class="bi bi-table"></i></span><span class="grow"><b>Buka lembar data</b><small>Spreadsheet “RAPI — Data Kinerja”</small></span><i class="bi bi-box-arrow-up-right muted"></i></a>` : ''}
+      ${S.ws ? `<a class="mi" href="${esc(GD.folderUrl(S.ws.rootId))}" target="_blank" rel="noopener"><span class="mi-ic"><i class="bi bi-folder2-open"></i></span><span class="grow"><b>Buka folder SIRAPI by Ahzani Labs di Drive</b><small>Milik Anda sendiri</small></span><i class="bi bi-box-arrow-up-right muted"></i></a>
+      <a class="mi" href="https://docs.google.com/spreadsheets/d/${esc(S.ws.ssId)}" target="_blank" rel="noopener"><span class="mi-ic"><i class="bi bi-table"></i></span><span class="grow"><b>Buka lembar data</b><small>Spreadsheet “SIRAPI — Data Kinerja”</small></span><i class="bi bi-box-arrow-up-right muted"></i></a>` : ''}
       ${mi('arrow-repeat', 'Sinkron sekarang', S.lastSync ? 'Terakhir: ' + waktuLog(new Date(S.lastSync).toISOString()) : 'Ambil & kirim data terbaru', 'syncPull')}</div>
     <div class="sec-title">Ekstensi e-Kinerja</div>
-    <div class="card card-pad"><p class="muted small m0">${document.documentElement.dataset.rapiExt === '1' ? '<span class="tag ok"><i class="bi bi-plug"></i> Terhubung</span> Data Final dikirim ke ekstensi saat halaman Laporan SKP dibuka.' : 'Pasang ekstensi Chrome RAPI agar isian Laporan SKP bisa diisi otomatis di e-Kinerja (Anda tetap login & menekan simpan sendiri).'}</p></div>
-    <p class="foot-brand">RAPI v${esc(APP_VERSION)} · Rekam Aktifitas dan Pelaporan Individu · by Ahzani Labs</p>`;
+    <div class="card card-pad"><p class="muted small m0">${document.documentElement.dataset.rapiExt === '1' ? '<span class="tag ok"><i class="bi bi-plug"></i> Terhubung</span> Data Final dikirim ke ekstensi saat halaman Laporan SKP dibuka.' : 'Pasang ekstensi Chrome SIRAPI agar isian Laporan SKP bisa diisi otomatis di e-Kinerja (Anda tetap login & menekan simpan sendiri).'}</p>
+      <div class="btn-row mt"><button class="btn btn-pri btn-sm" data-act="extZip"><i class="bi bi-download"></i> Unduh ekstensi (ZIP)</button><button class="btn btn-ghost btn-sm" data-act="extHelp"><i class="bi bi-question-circle"></i> Cara pasang</button></div></div>
+    ${pwaCard()}
+    <p class="foot-brand">SIRAPI v${esc(APP_VERSION)} · Sistem Integrasi Rekap Aktivitas dan Pelaporan Individu · by Ahzani Labs</p>`;
 }
 function fld(label, name, opt = {}) {
   const req = opt.req ? ' <span class="req">*</span>' : '';
@@ -869,14 +875,74 @@ async function doBackup(tahun) {
     }
   }
   busy(true, 'Membaca susunan folder…');
-  await walk(yf.id, 'RAPI/DATABASE LPJ/' + tahun);
+  await walk(yf.id, 'SIRAPI by Ahzani Labs/DATABASE LPJ/' + tahun);
   for (let i = 0; i < files.length; i++) { busy(true, 'Mengunduh ' + (i + 1) + '/' + files.length + '…'); zip.file(files[i].path, await GD.download(files[i].id)); }
   busy(true, 'Membuat ZIP…');
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'RAPI_' + tahun + '_' + safeFile(S.prof.nama || S.user.email) + '.zip';
+  a.href = URL.createObjectURL(blob); a.download = 'SIRAPI_' + tahun + '_' + safeFile(S.prof.nama || S.user.email) + '.zip';
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
   return files.length;
+}
+
+// ── 18b. Ekstensi Chrome (unduh ZIP dari aplikasi) ──────────
+const EXT_FILES = ['manifest.json', 'bridge.js', 'config.js', 'ekinerja.js', 'popup.html', 'popup.js', 'README.md', 'icons/16.png', 'icons/48.png', 'icons/128.png'];
+async function buildExtZip() {
+  if (!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  const zip = new window.JSZip(), dir = zip.folder('SIRAPI-Ekstensi');
+  const blobs = await Promise.all(EXT_FILES.map(f => fetch('extension/' + f, { cache: 'no-cache' })
+    .then(r => { if (!r.ok) throw new Error('Berkas ekstensi tidak ditemukan: ' + f); return r.blob(); })));
+  EXT_FILES.forEach((f, i) => dir.file(f, blobs[i]));
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'SIRAPI-Ekstensi-Chrome.zip';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+function extHelpHtml() {
+  const mobile = !isWide() && /Android|iPhone|iPad/i.test(navigator.userAgent);
+  return `${mobile ? '<div class="note warn mb"><i class="bi bi-laptop"></i><div>Ekstensi hanya bisa dipasang di <b>Chrome laptop/PC</b>. Chrome di HP tidak mendukung ekstensi.</div></div>' : ''}
+    <ol class="ext-steps">
+      <li>Tekan <b>Unduh ekstensi (ZIP)</b>, lalu <b>ekstrak</b> file ZIP (klik kanan → <i>Extract All</i>). Simpan foldernya di tempat tetap, jangan dihapus.</li>
+      <li>Buka alamat <code>chrome://extensions</code> di tab baru <button class="copy-btn" data-act="copy" data-copy="chrome://extensions"><i class="bi bi-clipboard"></i><span>Salin</span></button></li>
+      <li>Aktifkan <b>Mode pengembang</b> (<i>Developer mode</i>) di kanan atas.</li>
+      <li>Tekan <b>Muat yang belum dibuka</b> (<i>Load unpacked</i>), pilih folder <b>SIRAPI-Ekstensi</b>.</li>
+      <li>Sematkan ikon SIRAPI (ikon puzzle → pin). Buka SIRAPI → <b>Laporan SKP</b>, lalu buka e-Kinerja.</li>
+    </ol>
+    <p class="hint">Versi baru: unduh lagi, timpa isi folder lama, lalu tekan ⟳ pada kartu SIRAPI di <code>chrome://extensions</code>.</p>`;
+}
+
+// ── 18c. PWA (pasang di desktop & HP) + cek pembaruan ──────
+let SWREG = null, SWUPD = false, PWA_EVT = null;
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function regSW() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  navigator.serviceWorker.register('sw.js').then(r => { SWREG = r; }).catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (SWUPD) { SWUPD = false; location.reload(); } });
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); PWA_EVT = e; if (S.page === 'pengaturan') renderPage(); });
+window.addEventListener('appinstalled', () => { PWA_EVT = null; toast('SIRAPI terpasang di perangkat ini.'); if (S.page === 'pengaturan') renderPage(); });
+function pwaCard() {
+  if (isStandalone()) return '';
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const how = PWA_EVT ? 'Buka langsung dari layar utama / desktop, tanpa bilah alamat browser.'
+    : ios ? 'Di Safari: tekan tombol <b>Bagikan</b> lalu <b>Tambah ke Layar Utama</b>.'
+    : 'Di Chrome: menu <b>⋮</b> → <b>Instal aplikasi</b> / <b>Tambahkan ke layar utama</b>.';
+  return `<div class="sec-title">Aplikasi di perangkat</div>
+    <div class="card card-pad"><div class="row gap"><span class="ic brand"><i class="bi bi-phone"></i></span><div class="grow"><b>Pasang SIRAPI seperti aplikasi</b><div class="muted small">${how}</div></div>${PWA_EVT ? '<button class="btn btn-pri btn-sm" data-act="pwaInstall"><i class="bi bi-download"></i> Pasang</button>' : ''}</div></div>`;
+}
+/** Cek versi aplikasi baru (service worker). true bila ada versi yang menunggu dipasang. */
+async function checkUpdate() {
+  if (!SWREG) return false;
+  try { await SWREG.update(); } catch (e) { return false; }
+  const w = SWREG.installing;
+  if (w) await new Promise(res => { const t = setTimeout(res, 8000); w.addEventListener('statechange', () => { if (w.state !== 'installing') { clearTimeout(t); res(); } }); });
+  return !!SWREG.waiting;
+}
+function applyUpdate() {
+  if (!SWREG || !SWREG.waiting) return;
+  if (Object.keys(S.dirty).length) return toast('Versi baru tersedia — dipasang setelah data tersimpan. Tekan ⟳ lagi nanti.', 'warn');
+  SWUPD = true; toast('Memasang versi terbaru…');
+  SWREG.waiting.postMessage('skipWaiting');
 }
 
 // ── 19. Aksi ────────────────────────────────────────────────
@@ -900,6 +966,18 @@ const ACT = {
   logout: async () => { if (Object.keys(S.dirty).length && !await confirmBox('Ada perubahan yang belum tersimpan ke Drive. Tetap keluar?', 'Keluar', true)) return; logout(); },
   connectDrive: () => withDrive(() => { toast('Google Drive tersambung.'); return syncNow(); }),
   syncPull: () => withDrive(async () => { busy(true, 'Sinkron dengan Drive…'); await pull(); await syncNow(); busy(false); renderPage(); toast('Data terbaru sudah dimuat.'); }),
+  refresh: (ds, el) => {
+    if (el.classList.contains('spin')) return;
+    el.classList.add('spin');
+    refreshLicence();
+    const upd = checkUpdate();
+    withDrive(async () => { await pull(); await syncNow(); softRefresh(); postExport(); toast('Data terbaru sudah dimuat.'); })
+      .finally(() => upd.then(has => { el.classList.remove('spin'); if (has) applyUpdate(); }));
+  },
+  toggleSide: () => { const on = !$('#screen-app').classList.contains('side-mini'); $('#screen-app').classList.toggle('side-mini', on); store.gset('sideMini', on ? 1 : 0); },
+  extZip: (ds, btn) => { btnLoad(btn, true, 'Menyiapkan…'); buildExtZip().then(() => { toast('Ekstensi diunduh. Ikuti langkah pemasangan.'); ACT.extHelp(); }).catch(e => toast(e.message, 'bad')).finally(() => btnLoad(btn, false)); },
+  extHelp: () => openSheet({ title: 'Pasang ekstensi SIRAPI di Chrome', body: extHelpHtml(), foot: '<button class="btn btn-ghost" data-act="closeSheet">Tutup</button><button class="btn btn-pri" data-act="extZip"><i class="bi bi-download"></i> Unduh ekstensi (ZIP)</button>' }),
+  pwaInstall: async () => { if (!PWA_EVT) return; const e = PWA_EVT; PWA_EVT = null; e.prompt(); try { await e.userChoice; } catch (_) {} if (S.page === 'pengaturan') renderPage(); },
   toggleTheme: (ds, el) => { applyTheme(isDark() ? 'light' : 'dark'); el.outerHTML = themeBtn(); const sw = $('#pg-pengaturan [data-ch=theme]'); if (sw) sw.checked = isDark(); },
 
   pickTahun: () => {
@@ -915,7 +993,7 @@ const ACT = {
     openSheet({ title: 'Catat hasil kerja', body: `<div class="opt-list">
       <button class="opt" data-act="newVoice"><span class="ic brand"><i class="bi bi-mic-fill"></i></span><span><b>Catat dengan suara</b><small>Ucapkan kegiatan, form terisi otomatis</small></span><i class="bi bi-chevron-right muted"></i></button>
       <button class="opt" data-act="newLap"><span class="ic brand"><i class="bi bi-journal-plus"></i></span><span><b>Ketik catatan kegiatan</b><small>Isi uraian & foto, PDF dibuat otomatis</small></span><i class="bi bi-chevron-right muted"></i></button>
-      <button class="opt" data-act="newLink"><span class="ic info"><i class="bi bi-link-45deg"></i></span><span><b>Tempel link Drive</b><small>Hasil kerja yang dibuat di luar RAPI</small></span><i class="bi bi-chevron-right muted"></i></button>
+      <button class="opt" data-act="newLink"><span class="ic info"><i class="bi bi-link-45deg"></i></span><span><b>Tempel link Drive</b><small>Hasil kerja yang dibuat di luar SIRAPI</small></span><i class="bi bi-chevron-right muted"></i></button>
       <button class="opt" data-act="newUpload"><span class="ic ok"><i class="bi bi-file-earmark-arrow-up"></i></span><span><b>Unggah PDF</b><small>File PDF hasil kerja, maksimal 10 MB</small></span><i class="bi bi-chevron-right muted"></i></button></div>` });
   },
   newLap: () => { closeSheet(true); startForm(null, 1); },
@@ -988,6 +1066,7 @@ const ACT = {
     go('laporan');
   },
   formNext1: () => {
+    if (REC) REC.stop();
     const x = S.draft.data;
     if (!x.BuktiDukungID || !x.Tanggal || !String(x.Uraian).trim() || !String(x.Realisasi).trim()) return toast('Lengkapi kolom bertanda *.', 'warn');
     const id = S.draft.ID || uuid(), ex = lapById(id), b = bdById(x.BuktiDukungID);
@@ -1013,12 +1092,12 @@ const ACT = {
   voiceStart: () => {
     if (!Voice.supported()) return toast('Rekam suara butuh Google Chrome.', 'warn');
     if (REC) return;
-    VOICE = { final: '', interim: '', result: null };
+    VOICE = { final: '', interim: '', result: null, err: false };
     try {
       REC = Voice.start({
         onText: (f, i) => { VOICE.final = f; VOICE.interim = i; const t = $('.rec-text'); if (t) t.innerHTML = esc(f) + ' <span class="muted">' + esc(i) + '</span>'; },
-        onError: m => { toast(m, 'bad'); REC = null; paintVoice(); },
-        onEnd: f => { REC = null; const raw = (f || VOICE.final).trim(); if (raw) { const r = Voice.clean(raw); r.raw = raw; VOICE.result = r; } else toast('Tidak ada suara yang tertangkap.', 'warn'); paintVoice(); }
+        onError: m => { VOICE.err = true; toast(m, 'bad'); },
+        onEnd: f => { REC = null; const raw = (f || VOICE.final).trim(); if (raw) { const r = Voice.clean(raw); r.raw = raw; VOICE.result = r; } else if (!VOICE.err) toast('Tidak ada suara yang tertangkap.', 'warn'); paintVoice(); }
       });
     } catch (e) { REC = null; toast('Tidak dapat memulai rekam suara: ' + e.message, 'bad'); }
     paintVoice();
@@ -1099,7 +1178,7 @@ const ACT = {
   tahunAktif: ds => { S.tahun.forEach(t => { if (alive(t)) touch(Object.assign(t, { Aktif: t.ID === ds.id ? 'Y' : 'N' })); }); S.tahunId = ds.id; S.open = {}; dirty('Tahun'); renderPage(); },
   backup: () => {
     const ys = S.tahun.filter(alive).sort((x, y) => y.Tahun.localeCompare(x.Tahun));
-    openSheet({ title: 'Cadangkan data', body: `<p class="muted" style="margin-top:0">ZIP berisi folder <b>RAPI › DATABASE LPJ › Tahun › Butiran › TW</b> beserta semua PDF, persis seperti di Drive Anda. Dibuat langsung di browser.</p>
+    openSheet({ title: 'Cadangkan data', body: `<p class="muted" style="margin-top:0">ZIP berisi folder <b>SIRAPI by Ahzani Labs › DATABASE LPJ › Tahun › Butiran › TW</b> beserta semua PDF, persis seperti di Drive Anda. Dibuat langsung di browser.</p>
         <div class="field"><label>Tahun</label><select class="inp" id="bkTahun">${ys.map(t => `<option ${t.ID === S.tahunId ? 'selected' : ''}>${esc(t.Tahun)}</option>`).join('')}</select></div>`,
       foot: '<button class="btn btn-ghost" data-act="closeSheet">Batal</button><button class="btn btn-pri" data-act="backupGo"><i class="bi bi-file-earmark-zip"></i> Unduh ZIP</button>' });
   },
@@ -1151,6 +1230,7 @@ function bindGlobal() {
 }
 
 function start() {
+  regSW();
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   applyTheme(store.gget('theme', prefersDark ? 'dark' : 'light'));
   bindGlobal();

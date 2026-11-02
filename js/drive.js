@@ -1,5 +1,5 @@
 /* ============================================================
-   RAPI — js/drive.js · by Ahzani Labs
+   SIRAPI — js/drive.js · by Ahzani Labs
    Login Google (Google Identity Services) + Drive & Sheets milik
    pengguna sendiri, scope drive.file (hanya berkas yang dibuat RAPI).
    ============================================================ */
@@ -139,20 +139,28 @@ const GD = (function () {
   const download = async id => (await gfetch(DRV + '/files/' + id + '?alt=media')).blob();
   const folderUrl = id => 'https://drive.google.com/drive/folders/' + id;
 
-  // ── Workspace RAPI di Drive pengguna ────────────────────────
-  /** Cari / buat folder akar "RAPI" dan spreadsheet data. Ditandai appProperties agar ditemukan di perangkat lain. */
+  // ── Workspace SIRAPI di Drive pengguna ──────────────────────
+  const ROOT_NAME = 'SIRAPI by Ahzani Labs';
+  const SS_TITLE = 'SIRAPI — Data Kinerja';
+  /** Buat spreadsheet. Sheets API menolak 'id_ID' (bug lama): coba 'in_ID', bila ditolak buat tanpa locale. */
+  async function createSheet(heads) {
+    const sheets = Object.keys(heads).map((t, i) => ({ properties: { title: t, index: i, gridProperties: { frozenRowCount: 1 } } }));
+    const make = locale => gjson(SHT, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: Object.assign({ title: SS_TITLE, timeZone: 'Asia/Jakarta' }, locale ? { locale: locale } : {}), sheets: sheets })
+    });
+    try { return await make('in_ID'); } catch (e) { if (e.needAuth || !/locale/i.test(e.message)) throw e; return make(null); }
+  }
+  /** Cari / buat folder akar "SIRAPI by Ahzani Labs" dan spreadsheet data. Ditandai appProperties agar ditemukan di perangkat lain. */
   async function workspace(heads) {
     let root = await findByProp('rapi', 'root', FOLDER);
-    if (!root) root = await createFolder('RAPI', null, { rapi: 'root' });
+    if (!root) root = await createFolder(ROOT_NAME, null, { rapi: 'root' });
+    else if (root.name !== ROOT_NAME) {          // folder lama "RAPI" → ganti nama, isi tetap
+      try { await gfetch(DRV + '/files/' + root.id + '?fields=id', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: ROOT_NAME }) }); } catch (e) { if (e.needAuth) throw e; }
+    }
     let ss = await findByProp('rapi', 'data', SHEET);
     if (!ss) {
-      const created = await gjson(SHT, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          properties: { title: 'RAPI — Data Kinerja', locale: 'id_ID', timeZone: 'Asia/Jakarta' },
-          sheets: Object.keys(heads).map((t, i) => ({ properties: { title: t, index: i, gridProperties: { frozenRowCount: 1 } } }))
-        })
-      });
+      const created = await createSheet(heads);
       await gfetch(DRV + '/files/' + created.spreadsheetId + '?addParents=' + root.id + '&removeParents=root&fields=id', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appProperties: { rapi: 'data' } })
       });

@@ -1,11 +1,11 @@
-/* RAPI Ekstensi — popup.js: status data yang tersimpan di perangkat ini. */
+/* SIRAPI Ekstensi — popup.js: status data yang tersimpan di perangkat ini. */
 const b = document.getElementById('b');
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function show() {
   chrome.storage.local.get(['rapiExport', 'rapiOrigin', 'rapiSavedAt'], r => {
     const d = r.rapiExport;
-    if (!d) { b.innerHTML = 'Belum ada data. Buka aplikasi RAPI → menu <b>Laporan SKP</b>, lalu buka e-Kinerja.<p class="n">Ekstensi tidak meminta password atau cookie e-Kinerja.</p>'; return; }
-    b.innerHTML = `<div class="k">Akun RAPI</div><div class="v">${esc(d.email)}</div>
+    if (!d) { b.innerHTML = 'Belum ada data. Buka aplikasi SIRAPI → menu <b>Laporan SKP</b>, lalu buka e-Kinerja.<p class="n">Ekstensi tidak meminta password atau cookie e-Kinerja.</p>'; return; }
+    b.innerHTML = `<div class="k">Akun SIRAPI</div><div class="v">${esc(d.email)}</div>
       <div class="k">Tahun · butiran</div><div class="v">${esc(d.tahun)} · ${d.items.length} butiran</div>
       <div class="k">Diterima</div><div class="v">${new Date(r.rapiSavedAt).toLocaleString('id-ID')}</div>
       <div class="k">Dari</div><div class="v">${esc(r.rapiOrigin)}</div>

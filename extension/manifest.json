@@ -1,21 +1,47 @@
 {
   "manifest_version": 3,
-  "name": "RAPI — Isi e-Kinerja",
-  "short_name": "RAPI",
-  "version": "1.0.0",
-  "description": "Isi kolom realisasi & bukti dukung e-Kinerja dari data FINAL aplikasi RAPI. Tanpa password, tanpa cookie, Anda yang menekan Simpan. by Ahzani Labs",
-  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
-  "action": { "default_popup": "popup.html", "default_title": "RAPI", "default_icon": { "16": "icons/16.png", "48": "icons/48.png" } },
-  "permissions": ["storage"],
+  "name": "SIRAPI — Isi e-Kinerja",
+  "short_name": "SIRAPI",
+  "version": "1.1.0",
+  "description": "Isi kolom realisasi & bukti dukung e-Kinerja dari data FINAL aplikasi SIRAPI. Tanpa password, tanpa cookie, Anda yang menekan Simpan. by Ahzani Labs",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SIRAPI",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png"
+    }
+  },
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://*.github.io/*", "https://*.pages.dev/*", "https://*.netlify.app/*", "http://localhost/*", "http://127.0.0.1/*"],
-      "js": ["bridge.js"],
+      "matches": [
+        "https://*.github.io/*",
+        "https://*.pages.dev/*",
+        "https://*.netlify.app/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://kinerja.bkn.go.id/*"],
-      "js": ["config.js", "ekinerja.js"],
+      "matches": [
+        "https://kinerja.bkn.go.id/*"
+      ],
+      "js": [
+        "config.js",
+        "ekinerja.js"
+      ],
       "run_at": "document_idle"
     }
   ]
